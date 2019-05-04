@@ -1,0 +1,95 @@
+﻿1.redis上压测工具与案例命令
+  redis-benchmark
+
+  //100个并发连接，100000个请求
+  redis-benchmark -h 127.0.0.1 -p 6379 -c 100 -n 100000
+
+  //存取大小为100字节的数据包
+  redis-benchmark -h 127.0.0.1 -p 6379 -q -d 100
+
+  //只测set,lpush这个连个命令的100000个请求
+  redis-benchmark -t set,lpush -n 100000 -q
+
+  //只测redis.call('set','foo','bar')的性能
+  redis-benchmark -n 100000 -q script load "redis.call('set','foo','bar')"
+
+2.springboot打war包
+ 1,修改pom
+ 	<packaging>war</packaging>
+
+ 	<!--去除springboot自带的tomcat插件-->
+ 	<dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-tomcat</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>${project.artifactId}</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <configuration>
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+ 2,修改启动类
+ 	启动类extends SpringBootServletInitializer
+ 		@Override
+ 		protected SpringApplicationBuilder configure(SpringApplicationBuilder builder){
+ 			return builder.sources(启动类类名.class);
+ 		}
+ 3,maven进行打包
+ 	mvn package clean
+
+3,对商品超卖的问题优化 --- 其解决还是依靠数据库
+ 1，在sql语句上加上对其数量大于0的判断。(update spike_goods set stock_count = stock_count - 1 where goods_id = #{goodsId} and stock_count > 0)
+ 2，在秒杀订单的表上，对其userId和goodsId进行联合索引作为唯一索引，防止超卖。(UNIQUE KEY `u_uid_gid` (`user_id`,`goods_id`) USING BTREE COMMENT 'userId与goodsId联合作为唯一索引，防止卖超')
+
+4,秒杀接口优化 -- 异步下单
+ 1，系统初始化，把商品库存数量加载到Redis中
+ 2，收到请求，Redis预减库存，库存不足，直接返回，否则进入3
+ 3，请求入队，立即返回排队中
+ 4，服务端请求出队，生成订单，减少库存
+ 5，客户端轮询，是否秒杀成功
+git remote add origin https://github.com/CarlCZH/spikeDemo.git
+
+5,项目提交github --- 教程网址: https://www.cnblogs.com/panlangen/p/7501585.html
+  1、切换到项目路劲上，打开git bash
+  2、" git init " 
+  3、" git add . " ---  这个是将项目上所有的文件添加到仓库中的意思，如果想添加某个特定的文件，只需把' . '换成这个特定的文件名即可
+  4、" git commit -m "first commit " --- 表示你对这次提交的注释，双引号里面的内容可以根据个人的需要改
+  5、" git remote add origin https://自己的仓库url地址（上面有说到）" --- 将本地的仓库关联到github上
+  6、" git push -u origin master " --- 这是把代码上传到github仓库的意思。(时间比较久需耐心等待)
+  7、如果报failed to push some refs to 'https://github.com/CarlCZH/XXXXX.git'的错误,用以下方法解决(推荐使用第一种方式)
+    1: 进行push前先将远程仓库pull到本地仓库
+    $ git pull origin master    #git pull --rebase origin master
+    $ git push -u origin master
+
+    2: 强制push本地仓库到远程 (这种情况不会进行merge, 强制push后远程文件可能会丢失 不建议使用此方法)
+    $ git push -u origin master -f
+
+    3: 避开解决冲突, 将本地文件暂时提交到远程新建的分支中
+    $ git branch [name]
+    # 创建完branch后, 再进行push
+    $ git push -u origin [name] 
+
+  8、git branch -l :查看本地分支
+     git branch -r :查看远程分支
+     git branch -a :查看全部分支（远程的和本地的）
+
+  9、git branch -d <branch_name> :删除本地分支
+     git push origin --delete <BranchName> :删除远程分支
+
+
+
+
+
+
+
