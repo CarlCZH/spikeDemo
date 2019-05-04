@@ -134,7 +134,7 @@ public class RedisService {
      * 将javaBean转化成json字符串
      * @param value
      */
-    private <T> String beanToString(T value) {
+    public static <T> String beanToString(T value) {
         if (value == null){
             return null;
         }
@@ -147,7 +147,7 @@ public class RedisService {
      * @param clazz
      */
     @SuppressWarnings("unchecked")
-    private <T> T stringToBean(String data, Class<T> clazz) {
+    public static <T> T stringToBean(String data, Class<T> clazz) {
         if (data == null || data.length() <=0 || clazz == null){
             return null;
         }
