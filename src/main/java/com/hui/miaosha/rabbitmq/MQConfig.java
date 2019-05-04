@@ -13,9 +13,27 @@ import org.springframework.context.annotation.Configuration;
 public class MQConfig {
 
     public static final String QUEUE = "queue";
+    public static final String TOPIC_QUEUE1 = "queue1";
+    public static final String TOPIC_QUEUE2 = "queue2";
 
+    /**
+     * Direct模式 交换机Exchange
+     */
     @Bean
     public Queue queue(){
         return new Queue(QUEUE, true);
     }
+
+    /**
+     * Topic模式 交换机Exchange
+     */
+    @Bean
+    public Queue topicQueue1(){
+        return new Queue(TOPIC_QUEUE1, true);
+    }
+    @Bean
+    public Queue topicQueue2(){
+        return new Queue(TOPIC_QUEUE2, true);
+    }
+
 }
