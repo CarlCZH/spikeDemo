@@ -2,8 +2,10 @@ package com.hui.miaosha.controller;
 
 import com.hui.miaosha.domain.SpikeUser;
 import com.hui.miaosha.domain.UserInfo;
+import com.hui.miaosha.rabbitmq.MQSender;
 import com.hui.miaosha.redis.KeyPrefix.SpikeUserPrefix;
 import com.hui.miaosha.redis.RedisService;
+import com.hui.miaosha.result.CodeMsg;
 import com.hui.miaosha.result.ResultMsg;
 import com.hui.miaosha.service.UserService;
 import org.apache.ibatis.annotations.Param;
@@ -19,7 +21,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 /**
  * @Author: CarlChen
- * @Despriction:TODO
+ * @Despriction: 测试Controller
  * @Date: Create in 21:51 2019\4\11 0011
  */
 @Controller
@@ -33,10 +35,20 @@ public class SampleController {
     @Autowired
     RedisService redisService;
 
+    @Autowired
+    MQSender mqSender;
+
     @GetMapping(value = "/hello")
     @ResponseBody
     public String sample(){
         return "Hello,this is first sample !";
+    }
+
+    @GetMapping(value = "mqTest")
+    @ResponseBody
+    public ResultMsg<String> mqTest(){
+        mqSender.send("这是个简单的Direct模式 交换机Exchange");
+        return ResultMsg.ERROR(CodeMsg.SUCCESS);
     }
 
     //测试thymeleaf模板
