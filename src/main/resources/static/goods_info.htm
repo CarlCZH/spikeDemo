@@ -1,0 +1,161 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>商品详情页面</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <!-- jquery -->
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
+    <!-- bootstrap -->
+    <link rel="stylesheet" type="text/css" href="/bootstrap/css/bootstrap.min.css" />
+    <script type="text/javascript" src="/bootstrap/js/bootstrap.min.js"></script>
+    <!-- jquery-validator -->
+    <script type="text/javascript" src="/jquery-validation/jquery.validate.min.js"></script>
+    <script type="text/javascript" src="/jquery-validation/localization/messages_zh.min.js"></script>
+    <!-- layer -->
+    <script type="text/javascript" src="/layer/layer.js"></script>
+    <!-- md5.js -->
+    <script type="text/javascript" src="/js/md5.min.js"></script>
+    <!-- common.js -->
+    <script type="text/javascript" src="/js/common.js"></script>
+</head>
+<body>
+<div class="panel panel-default">
+    <div class="panel-heading">秒杀商品详情</div>
+    <div class="panel-body">
+        <span id="userTip">您还没有<a href="/login/">登录</a>,请登陆后再操作<br/></span>
+        <span>没有收货地址的提示.....</span>
+    </div>
+    <table class="table" id="goodslist">
+        <tr>
+            <td>商品名称</td>
+            <td colspan="3" id="goodsName"></td>
+        </tr>
+        <tr>
+            <td>商品图片</td>
+            <td colspan="3"><img width="200" height="200" id="goodsImg"></td>
+        </tr>
+        <tr>
+            <td>秒杀开始时间</td>
+            <td id="startTime"></td>
+            <td>
+                <input type="hidden" id="spikeRemainSecond">
+                <span id="spikeTip"></span>
+            </td>
+            <td>
+                <!--<form id="miaoshaForm" method="post" action="/spike/detail">-->
+                    <!--<button class="btn btn-primary btn-block" type="submit" id="buyButton">立即秒杀</button>-->
+                    <!--<input type="hidden" name="goodsId" id="goodsId"/>-->
+                <!--</form>-->
+                <input class="btn btn-primary btn-block" type="button" id="buyButton" value="立即秒杀" onclick="dospike();"/>
+                <input type="hidden" name="goodsId" id="goodsId"/>
+            </td>
+        </tr>
+        <tr>
+            <td>商品原价</td>
+            <td colspan="3" id="OldPrice"></td>
+        </tr>
+        <tr>
+            <td>秒杀价</td>
+            <td colspan="3" id="spikePrice"></td>
+        </tr>
+        <tr>
+            <td>库存数量</td>
+            <td colspan="3" id="stockCount"></td>
+        </tr>
+    </table>
+</div>
+</body>
+<script>
+    $(function(){
+        getDetail();
+    });
+
+    //获取商品详情信息
+    function getDetail() {
+        var goodsId = g_getQueryString("goodsId");
+        $.ajax({
+            url:"/goods/detail/" + goodsId,
+            type:"GET",
+            success:function(data){
+                if (data.code == 0){
+                    //进行页面数据的渲染
+                    render(data.data);
+                }else{
+                    layer.msg(data.msg);
+                }
+            },
+            error:function () {
+                layer.msg("客户端请求错误");
+            }
+        });
+    }
+
+    //进行页面数据的渲染
+    function render(detail) {
+        var spikeStatus = detail.spikeStatus;
+        var spikeRemainSecond = detail.spikeRemainSecond;
+        var goods = detail.spikeGoodsVo;
+        var user = detail.spikeUser;
+        if (user){
+            $("#userTip").hide();
+        }
+        $("#goodsName").text(goods.goodsName);
+        $("#goodsImg").attr("src",goods.goodsImg);
+        $("#startTime").text(new Date(goods.startDate).format("yyyy-MM-dd hh:mm:ss"));
+        $("#spikeRemainSecond").val(spikeRemainSecond);
+        $("#goodsId").val(goods.id);
+        $("#OldPrice").text(goods.goodsPrice);
+        $("#spikePrice").text(goods.spikePrice);
+        $("#stockCount").text(goods.stockCount);
+        countDown();
+    }
+
+    //对秒杀开始时间,倒计时时间进行处理
+    function countDown() {
+        var spikeRemainSecond = $("#spikeRemainSecond").val();
+        var timeout;
+        if (spikeRemainSecond > 0){ //秒杀还没开始
+            //按钮无效
+            $("#buyButton").attr("disabled", true);
+            $("#spikeTip").html("秒杀活动倒计时 " + spikeRemainSecond + " 秒");
+            timeout = setTimeout(function () {
+                $("#countDown").text(spikeRemainSecond - 1);
+                $("#spikeRemainSecond").val(spikeRemainSecond - 1);
+                countDown();
+            },1000);
+        }else if(spikeRemainSecond == 0){ //秒杀正在进行
+            //按钮有效
+            $("#buyButton").attr("disabled", false);
+            if (timeout){
+                clearTimeout(timeout);
+            }
+            $("#spikeTip").html("秒杀活动正在进行");
+        } else { //秒杀已经结束
+            //按钮无效
+            $("#buyButton").attr("disabled", true);
+            $("#spikeTip").html("秒杀活动已经结束")
+        }
+    }
+
+    dospike = function () {
+        //debugger;
+        $.ajax({
+            url:"/spike/do_spike",
+            type:"POST",
+            data:{
+                goodsId:$("#goodsId").val()
+            },
+            success:function (data) {
+                if (data.code === 0){
+                    window.location.href="/order_detail.htm?orderId="+data.data.id;
+                }else{
+                    layer.msg(data.msg);
+                }
+            },
+            error:function () {
+                layer.msg("客户端请求错误");
+            }
+        });
+    }
+</script>
+</html>
